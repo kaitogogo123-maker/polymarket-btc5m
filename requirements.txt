@@ -1,0 +1,7 @@
+numpy>=2.5
+pandas>=3.1
+scipy>=1.18
+pyarrow>=26
+requests>=2.34
+websockets>=17
+psycopg[binary]>=3.3

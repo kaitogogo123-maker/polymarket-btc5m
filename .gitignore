@@ -1,0 +1,9 @@
+.venv/
+data/
+out/
+__pycache__/
+.DS_Store
+.neon_url
+.push_token
+deploy/.dev.vars
+deploy/.wrangler/

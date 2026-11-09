@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0c0e13">
+<title>BTC 5 分钟盘口</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{color-scheme:dark;--roll:linear(0, 0.0105, 0.0381, 0.0777, 0.1254, 0.1781, 0.2334, 0.2896, 0.3453, 0.3994, 0.4514, 0.5008, 0.5472, 0.5905, 0.6306, 0.6676, 0.7016, 0.7326, 0.7609, 0.7865, 0.8097, 0.8306, 0.8494, 0.8663, 0.8814, 0.895, 0.9071, 0.9179, 0.9275, 0.936, 0.9436, 0.9503, 0.9563, 0.9615, 0.9662, 0.9703, 0.9739, 0.9771, 0.9799, 0.9824, 0.9846, 0.9865, 0.9882, 0.9897, 0.991, 0.9921, 0.9931, 0.994, 0.9948, 0.9954, 0.996, 0.9965, 0.997, 0.9974, 0.9977, 0.998, 0.9983, 0.9985, 0.9987, 0.9989, 1);
+--bg:#0c0e13;--card:#1c1f27;--line:#2e3138;--grid:#1f222a;--ink:#fff;--ink2:#b6bbc4;--ink3:#9a9ea8;
+--up:#22b75e;--up-fill:#007723;--down:#f2484e;--down-fill:#e0121a;--up-bar:rgba(34,183,94,.14);--down-bar:rgba(242,72,78,.14);
+--btc:#f7931a;--prob:#1a8cff}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+html{background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;color:var(--ink);font:400 14px/1.4 Inter,-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#app{height:100%;max-width:1680px;margin:auto;padding:16px 24px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px}
+#main{min-width:0;min-height:0;display:flex;flex-direction:column}
+#right{min-height:0;display:flex;flex-direction:column;gap:12px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+/* title */
+#head{flex:none;display:flex;align-items:center;gap:14px}
+.coin{width:52px;height:52px;border-radius:8px;background:var(--btc);display:grid;place-items:center;font-size:36px;font-weight:700;font-style:italic}
+h1{margin:0;font-size:24px;line-height:28px;font-weight:600;letter-spacing:-.36px}
+#win{color:var(--ink2);font-size:16px;margin-top:2px}
+/* numbers */
+#stats{flex:none;min-height:60px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+#btcStats{display:flex;align-items:center;gap:20px}
+.num small{display:flex;gap:18px;font-size:12px;line-height:16px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.num b{display:block;font-size:24px;line-height:28px;font-weight:620;letter-spacing:.6px;color:var(--ink2);white-space:nowrap}
+.sep{align-self:stretch;width:1px;margin:4px 0;background:var(--line)}
+.cur small,.cur b{color:var(--btc)}
+#delta.u{color:var(--up)}#delta.d{color:var(--down)}
+#probStats small{color:var(--prob)}#probStats b{color:var(--prob)}
+.pr{display:flex;align-items:center;gap:10px}#probd{font-size:12px;font-weight:600;white-space:nowrap}#probd.u{color:var(--up)}#probd.d{color:var(--down)}
+#clock{display:flex;gap:18px;text-align:center}
+#clock b{display:block;font-size:24px;line-height:28px;font-weight:620;letter-spacing:.6px;color:var(--down)}
+#clock small{display:block;font-size:11px;line-height:15px;font-weight:600;color:var(--ink3)}
+#golive{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:var(--card);font-weight:600;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--down-fill);flex:none}
+/* chart */
+#wrap{position:relative;flex:1;min-height:0;margin-top:6px}
+svg{display:block}
+#c{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y}
+#cv{position:absolute;left:0;top:0;pointer-events:none}
+/* a trade flies up from the left of the chart */
+#fly{position:absolute;left:10px;height:0;z-index:1;pointer-events:none}
+#fly div{position:absolute;left:0;bottom:0;font-size:13px;line-height:18px;font-weight:600;white-space:nowrap;text-shadow:-1px -1px 0 var(--bg),1px -1px 0 var(--bg),-1px 1px 0 var(--bg),1px 1px 0 var(--bg);transition:transform .3s ease-out,opacity .3s ease-out;animation:flyin .3s ease-out backwards}
+#fly .u{color:var(--up)}#fly .d{color:var(--down)}
+#fly .out{transition:transform .25s ease-in,opacity .25s ease-in}
+@keyframes flyin{from{opacity:0}}
+/* numbers roll digit by digit; the real text stays in .sr for reading and copying */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.rl{display:inline-flex;overflow:hidden;height:var(--lh,1.25em);line-height:var(--lh,1.25em);vertical-align:baseline}
+.rl i{display:block;font-style:normal;flex:none;height:var(--lh,1.25em)}
+.rl .ch::before{content:attr(data-c);white-space:pre}
+.rl .dg::before{content:"0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";display:block;white-space:pre;transform:translateY(calc(var(--d)*var(--lh,1.25em)*-1));transition:transform .702s var(--roll)}
+.rl .new{animation:flyin .2s ease-out backwards}
+@supports not (transition-timing-function:linear(0,1)){.rl .dg::before{transition-timing-function:cubic-bezier(.16,1,.3,1)}}
+.dot{position:relative}
+.dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:ping 1.5s cubic-bezier(0,0,.2,1) infinite}
+@keyframes ping{0%{transform:scale(1);opacity:.75}75%,100%{transform:scale(2);opacity:0}}
+@media (pointer:coarse){.ball,#pastbtn{position:relative}.ball::after{content:"";position:absolute;inset:-11px -2.5px}#pastbtn::after{content:"";position:absolute;inset:-13px -8px -13px -13px}.pill,[data-m]{position:relative}.pill::after{content:"";position:absolute;inset:-6px 0}[data-m]::after{content:"";position:absolute;inset:-8px 0}}
+label{white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.rl .dg::before{transition:none}.rl .new,.dot::after,#fly div{animation:none}}
+#c text{font-size:12px;fill:var(--ink3)}
+.grid{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges}
+.dots{stroke:var(--line);stroke-width:1;stroke-dasharray:1 4;shape-rendering:crispEdges}
+.base{stroke:var(--line);stroke-width:1;shape-rendering:crispEdges}
+.target{stroke:var(--ink3);stroke-width:1;stroke-dasharray:7 7;shape-rendering:crispEdges}
+.current{stroke:var(--btc);stroke-width:1;stroke-dasharray:7 7;opacity:.6;shape-rendering:crispEdges}
+.btcline{fill:none;stroke:var(--btc);stroke-width:2;stroke-linejoin:round}
+.probline{fill:none;stroke:var(--prob);stroke-width:2;shape-rendering:crispEdges}
+.vb{fill:var(--up);shape-rendering:crispEdges}.vs{fill:var(--down);shape-rendering:crispEdges}
+.hair{stroke:var(--ink3);stroke-width:1;shape-rendering:crispEdges}
+#c text.pill{fill:var(--ink);font-weight:500}
+#tip{position:absolute;top:6px;display:none;pointer-events:none;padding:4px 10px;border-radius:8px;background:var(--card);border:1px solid var(--line);white-space:nowrap}
+#alert{position:absolute;top:4px;left:50%;transform:translateX(-50%);z-index:1;max-width:calc(100% - 24px);padding:3px 12px;border-radius:8px;background:var(--card);color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* bar under the chart */
+#bar{flex:none;position:relative;margin-top:10px;display:flex;align-items:center;gap:8px}
+.pill{height:32px;padding:0 13px;border-radius:999px;background:var(--card);display:inline-flex;align-items:center;gap:7px;white-space:nowrap;flex:none}
+.pill:hover{background:var(--line)}
+.pill[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:500}
+#pastgroup{display:inline-flex;align-items:center;height:32px;padding:0 10px 0 13px;border-radius:999px;background:var(--card);flex:none}
+#pastbtn{display:inline-flex;align-items:center;gap:7px;padding-right:10px;margin-right:8px;border-right:1px solid var(--line);height:18px}
+.chev{width:7px;height:7px;border:solid var(--ink);border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg)}
+#balls{display:flex;gap:5px}
+.ball{width:21px;height:21px;border-radius:50%;display:grid;place-items:center;font-size:10px;line-height:1;color:var(--ink)}
+.ball.u{background:var(--up-fill)}.ball.d{background:var(--down-fill)}
+.ball[aria-pressed=true]{outline:2px solid var(--ink);outline-offset:1px}
+#pills{display:flex;gap:8px;min-width:0;overflow:hidden}
+#pills button:focus-visible{outline-offset:-3px}
+#pills button[aria-pressed=true]:focus-visible{outline-color:var(--bg)}
+#toggle{margin-left:auto;display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:10px;flex:none}
+#toggle button{width:34px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--ink2);font-weight:700;font-style:italic;font-size:15px}
+#toggle button[data-m=prob][aria-pressed=true]{background:rgba(26,140,255,.22);color:var(--prob)}
+#toggle button[data-m=btc][aria-pressed=true]{background:rgba(247,147,26,.28);color:var(--btc)}
+#menu{position:absolute;left:0;bottom:calc(100% + 6px);z-index:2;width:290px;max-height:min(440px,60vh);overflow-y:auto;padding:6px;border-radius:12px;background:var(--card);border:1px solid var(--line);scrollbar-color:var(--line) transparent}
+#menu button{display:grid;grid-template-columns:52px 46px 1fr;width:100%;padding:6px 10px;border-radius:7px;text-align:left}
+#menu button:hover{background:var(--line)}
+#menu button[aria-pressed=true]{background:var(--line);font-weight:600}
+#menu .d{text-align:right}
+#menu .now{grid-column:2/4;color:var(--ink2)}
+#menu .none{display:block;padding:6px 10px;color:var(--ink3)}
+.t-u{color:var(--up)}.t-d{color:var(--down)}
+#status{flex:none;margin-top:10px;display:flex;flex-wrap:wrap;gap:2px 18px;color:var(--ink3);font-size:13px}
+#status b{font-weight:500;color:var(--ink2)}
+/* right */
+.card{background:var(--card);border-radius:16px}
+#trade{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:12px}
+.side{height:44px;border-radius:9.2px;display:grid;place-items:center;font-size:17px;font-weight:600;white-space:nowrap}
+#upb,#downb{border:1px solid var(--line);color:var(--ink2)}
+#upb.on{background:var(--up-fill);border-color:var(--up-fill);color:var(--ink)}
+#downb.on{background:var(--down-fill);border-color:var(--down-fill);color:var(--ink)}
+#amtrow{grid-column:1/-1;display:flex;align-items:center;gap:6px}
+#amtrow label{color:var(--ink2);margin-right:auto}
+#amtbox{display:flex;align-items:center;gap:2px;width:92px;height:36px;padding:0 8px;border:1px solid var(--line);border-radius:8px;font-weight:600}
+#amtbox:focus-within{border-color:var(--ink2)}
+#amt{width:100%;min-width:0;border:0;outline:0;background:none;color:var(--ink);font:inherit;text-align:right}
+.add{height:36px;min-width:40px;padding:0 6px;border-radius:8px;background:var(--line);color:var(--ink);font-size:13px}
+#est{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 10px;color:var(--ink2);font-size:13px;white-space:nowrap}
+#place{grid-column:1/-1;height:42px;border-radius:9.2px;background:var(--prob);color:var(--ink);font-weight:600}
+#place:disabled{background:var(--line);color:var(--ink2);cursor:default}
+#paper{flex:none;padding-bottom:6px}
+#paperl .row{height:26px;grid-template-columns:auto minmax(0,1fr) auto;gap:10px}
+#result{flex:none;padding:16px}
+#result small{display:block;color:var(--ink2);font-size:13px}
+#result b{display:block;font-size:30px;font-weight:620;margin:2px 0 8px}
+#result div{display:flex;justify-content:space-between;padding-top:6px;color:var(--ink2)}
+#result div span:last-child{color:var(--ink)}
+.cardh{flex:none;display:flex;flex-wrap:wrap;column-gap:10px;justify-content:space-between;align-items:baseline;padding:10px 14px 8px}
+.cardh strong{font-size:16px;font-weight:600;white-space:nowrap}
+.cardh span{color:var(--ink2);white-space:nowrap}
+.row{display:grid;grid-template-columns:1fr 1.1fr 1.1fr;align-items:center;height:29px;padding:0 14px;text-align:right;white-space:nowrap}
+.row>:first-child{text-align:left}
+.row.none{color:var(--ink3)}
+.colh{height:26px;border-block:1px solid var(--line);color:var(--ink3);font-size:12px;font-weight:600}
+.px{font-weight:600}
+#mid{height:30px;display:flex;justify-content:space-between;align-items:center;padding:0 14px;border-block:1px solid var(--line);color:var(--ink2);font-size:13px;white-space:nowrap}
+#bookcard{flex:none;overflow:hidden}
+#tapecard{flex:1 0 220px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#tape{flex:1;min-height:0;overflow:hidden;display:flex;flex-flow:column wrap;align-content:flex-start}
+#tape .row{width:100%;flex:none;height:27px;grid-template-columns:1.15fr .9fr .9fr}
+#tape .time{color:var(--ink3)}
+#tape .big{font-weight:700}
+@media (max-width:359px){#paperl .row{grid-template-columns:minmax(0,1fr) auto}#paperl .time{display:none}#paperl .row>:nth-child(2){text-align:left}}
+@media (max-height:760px){.row{height:24px}#tape .row{height:24px}}
+@media (max-width:1100px){#app{grid-template-columns:minmax(0,1fr) 320px;gap:16px;padding:12px 16px}#pills .old{display:none}}
+@media (max-width:820px),(max-height:560px){#bar{flex-wrap:wrap}#pills{flex-wrap:wrap;overflow:visible}html,body{height:auto}#app{display:block;height:auto;padding:12px}#wrap{height:340px;flex:none}#fly{left:4px}#right{margin-top:14px}#amt{font-size:16px}.add,#amtbox{height:44px}#place,.side{height:48px}#tapecard{height:320px;flex:none}#stats{flex-wrap:wrap}h1{font-size:20px}#win{font-size:14px}.coin{width:44px;height:44px;font-size:30px}.num b{font-size:18px;letter-spacing:0}.num small{gap:8px}#clock{gap:10px}#clock b{font-size:20px}#menu{width:100%}#menu button{padding:10px}#btcStats{gap:10px}}
+</style>
+</head>
+<body>
+<div id="app">
+<section id="main">
+  <div id="head"><div class="coin" aria-hidden="true">₿</div><div><h1>BTC 5分钟上涨或下跌</h1><div id="win"></div></div></div>
+  <div id="stats">
+    <div id="btcStats">
+      <div class="num"><small>目标价格</small><b id="ptb">–</b></div>
+      <i class="sep"></i>
+      <div class="num cur"><small><span id="nowl">当前价格</span><span id="delta"></span></small><b id="now">–</b></div>
+    </div>
+    <div id="probStats" class="num" hidden><small id="probl">UP</small><div class="pr"><b id="prob">–</b><span id="probd"></span></div></div>
+    <div id="clock"><div><b id="mm">–</b><small>分钟</small></div><div><b id="ss">–</b><small>秒</small></div></div>
+    <button id="golive" type="button" hidden><i class="dot"></i>前往实时盘口 ›</button>
+  </div>
+  <div id="wrap"><div id="alert" role="status" hidden></div><svg id="c" role="img" aria-label="BTC 价格或上涨概率，以及成交量"></svg><canvas id="cv" aria-hidden="true"></canvas><div id="fly" aria-hidden="true"></div><div id="tip"></div></div>
+  <div id="bar">
+    <div id="pastgroup"><button id="pastbtn" type="button" aria-expanded="false">过去 <i class="chev"></i></button><div id="balls"></div></div>
+    <div id="pills"></div>
+    <div id="toggle">
+      <button type="button" data-m="prob" title="上涨概率" aria-label="上涨概率"><svg width="17" height="15" viewBox="0 0 17 15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 1v13h15"/><path d="M4 10l3.5-4 3 2.5L15 3"/></svg></button>
+      <button type="button" data-m="btc" title="BTC 价格" aria-label="BTC 价格">₿</button>
+    </div>
+    <div id="menu" hidden></div>
+  </div>
+  <div id="status"></div>
+</section>
+<aside id="right">
+  <form id="trade" class="card" autocomplete="off">
+    <button type="button" id="upb" class="side"><span>Up <span id="upv">–</span></span></button><button type="button" id="downb" class="side"><span>Down <span id="downv">–</span></span></button>
+    <div id="amtrow"><label for="amt">金额</label><span id="amtbox">$<input id="amt" inputmode="decimal" value="10" maxlength="7"></span>
+      <button type="button" class="add" data-a="1">+1</button><button type="button" class="add" data-a="10">+10</button><button type="button" class="add" data-a="100">+100</button></div>
+    <div id="est"></div>
+    <button type="submit" id="place"></button>
+  </form>
+  <div id="paper" class="card" hidden>
+    <div class="cardh"><strong>模拟记录</strong><span id="papers"></span></div>
+    <div id="paperl"></div>
+  </div>
+  <div id="result" class="card" hidden></div>
+  <div id="bookcard" class="card">
+    <div class="cardh"><strong>订单簿</strong><span id="bookc"></span></div>
+    <div class="row colh"><span>价格</span><span>份额</span><span>总计</span></div>
+    <div id="asks"></div>
+    <div id="mid"><span id="lastp"></span><span id="spread"></span></div>
+    <div id="bids"></div>
+  </div>
+  <div id="tapecard" class="card">
+    <div class="cardh"><strong>逐笔成交</strong><span id="tapec"></span></div>
+    <div id="tape"></div>
+  </div>
+</aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const M = {l: 0, r: 66, t: 8, b: 22, gap: 24};
+const ROWS = 5, BIG = 100, PILLS = 3;
+const started = Date.now();
+let note = '', tradable = false, quotaOut = false, inFlight = false, S = null, listKey = null, sel = null;
+const QUIET = 30000, LOST = 120000, TROUBLE = 60000;
+let retryT = null, retryGap = 1000, freshAt = Date.now(), srcNow = 0, lastTick = Date.now(), held = null, troubleAt = Date.now();
+let mode = localStorage.getItem('chart') === 'prob' ? 'prob' : 'btc';
+
+const sgn = v => v >= 0 ? '+' : '−';
+const commas = t => t.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const usd = v => { if (v == null) return '–'; const [a, b] = Math.abs(v).toFixed(2).split('.'); return (v < 0 ? '-' : '') + commas(a) + '.' + b; };
+const delta = v => v == null ? '–' : sgn(v) + usd(Math.abs(v));
+const cents = v => v == null ? '–' : String(+(v * 100).toFixed(1));
+const shares = v => commas(String(Math.round(v)));
+const p2 = n => String(n).padStart(2, '0');
+const hm = t => { const d = new Date(t * 1000); return p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+const hms = ms => { const d = new Date(ms); return p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); };
+const qty = v => v < 1 ? '<1' : shares(v);
+const clock = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+function el(n, a, txt) { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+function html(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+// Same number of rows: change only the text that differs, so nothing is laid out again without need.
+function patch(box, rows) {
+  while (box.children.length > rows.length) box.lastChild.remove();
+  rows.forEach((n, i) => {
+    const o = box.children[i];
+    if (!o) { box.append(n); return; }
+    if (o.className !== n.className) o.className = n.className;
+    if (o.style.background !== n.style.background) o.style.background = n.style.background;
+    if (o.children.length !== n.children.length) { o.replaceChildren(...n.childNodes); return; }
+    if (!n.children.length) { if (o.textContent !== n.textContent) o.textContent = n.textContent; return; }
+    for (let k = 0; k < n.children.length; k++) {
+      const a = o.children[k], b = n.children[k];
+      if (a.textContent !== b.textContent) a.textContent = b.textContent;
+      if (a.className !== b.className) a.className = b.className;
+    }
+  });
+}
+function row(cls, vals) { const r = html('div', 'row' + (cls ? ' ' + cls : '')); for (const [t, c] of vals) r.append(html('span', c, t)); return r; }
+
+// The price area is a canvas that rolls at 60 fps; the volume strip below stays SVG and is redrawn only when its data changes.
+const bodyFont = getComputedStyle(document.body).fontFamily;
+const cv = $('cv'), cx = cv.getContext('2d'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+const INK = {btc: '#f7931a', prob: '#1a8cff', grid: '#1f222a', line: '#2e3138', ink: '#fff', ink3: '#9a9ea8', pill: '#5b6472'};
+const AX = 18, WINDOW = 28, AHEAD = 3, BRIDGE = 6;        // seconds behind and ahead of the end of the line: it sits about 90% across
+let G = null, series = [], D = null, tickAt = 0, tickDt = 0, yLo = null, yHi = null, raf = 0, onScreen = true, slow = 0, paintedAt = 0;
+let hx = null, hy = null, volKey = '', paintKey = '', seenView = null, seenMode = null, hairEl = null, tipText = '';
+const isLive = () => !!S && S.view === S.T;
+let seenLive = false;
+const isRolling = () => isLive() && mode === 'btc';
+
+function layout() {
+  const r = $('wrap').getBoundingClientRect(), W = Math.floor(r.width), H = Math.floor(r.height);
+  if (W < 50 || H < 50) { G = null; return; }
+  const rolling = isLive(), gap = M.gap + (rolling ? AX : 0), avail = H - M.t - M.b - gap;
+  const h2 = Math.max(44, Math.round(avail * .16)), h1 = avail - h2, bottom = M.t + h1, ch = bottom + AX + 1;
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  G = {W, H, h1, h2, bottom, t2: bottom + gap, right: W - M.r, ch, dpr, rolling};
+  cv.width = Math.round(W * dpr); cv.height = Math.round(ch * dpr);
+  cv.style.width = W + 'px'; cv.style.height = ch + 'px';
+  cx.font = '12px ' + bodyFont;                 // resizing a canvas resets this, and setting it is not cheap
+  $('fly').style.bottom = H - bottom + 8 + 'px';
+  volKey = paintKey = '';
+}
+
+// What the data says: one price per second, kept across the window change so the line doesn't restart.
+function feed() {
+  feedTape();
+  if (!isLive()) return;
+  let last = series.length ? series[series.length - 1][0] : 0;
+  for (const q of S.points) {
+    const a = S.T + q[0];
+    if (q[3] != null && a > last) { series.push([a, q[3]]); last = a; }
+  }
+  if (S.now - S.T < WINDOW + 5 && S.T !== filledFor && (series.length === 0 || series[0][0] >= S.T)) backfill(S.T);
+  const keep = last - 90;
+  if (series.length && series[0][0] < keep) series = series.filter(p => p[0] >= keep);
+}
+// Opened just after a window began: the line's left part is the previous window, fetched once.
+let filledFor = null;
+async function backfill(T) {
+  filledFor = T;
+  try {
+    const r = await fetch('/state?t=' + (T - 300), {cache: 'no-store'});
+    if (!r.ok) return;
+    const old = await r.json();
+    if (old.view !== T - 300) return;
+    const first = series.length ? series[0][0] : Infinity;
+    const add = old.points.filter(q => q[3] != null && old.view + q[0] < first && old.view + q[0] >= T - 60).map(q => [old.view + q[0], q[3]]);
+    if (add.length) series = [...add, ...series];
+  } catch (e) { /* the line just starts later */ }
+}
+function newest() {
+  if (mode === 'btc') return series.length ? series[series.length - 1][0] : null;
+  for (let i = S.points.length - 1; i >= 0; i--) if (S.points[i][2] != null) return S.T + S.points[i][0];
+  return null;
+}
+// The display clock runs in real time just behind the newest data, so bursts every few seconds look continuous.
+function tick() {
+  const now = performance.now(), L = newest();
+  tickDt = Math.min((now - tickAt) / 1000, 1); tickAt = now;
+  if (L == null) return;
+  if (calm.matches) { D = L; return; }
+  const behind = streaming() ? .6 : 2;          // data every second can run closer than data every few seconds
+  if (D == null || L - D > 12 || D > L) { D = L - behind; return; }
+  D = Math.min(L, D + tickDt * Math.max(0, Math.min(2, 1 + (L - behind - D) * .15)));
+}
+function valAt(a) {
+  for (let i = series.length - 1; i >= 0; i--) {
+    const p = series[i];
+    if (p[0] > a) continue;
+    const n = series[i + 1];
+    return n && n[0] - p[0] <= BRIDGE ? p[1] + (n[1] - p[1]) * (a - p[0]) / (n[0] - p[0]) : p[1];
+  }
+  return null;
+}
+
+const crisp = v => (Math.round(v * G.dpr) + .5) / G.dpr;   // a 1 px rule on a device pixel, even while the scale moves
+function rule(y, color, dash, alpha) {
+  cx.beginPath(); cx.moveTo(0, y); cx.lineTo(G.right, y);
+  cx.lineWidth = 1; cx.strokeStyle = color; cx.globalAlpha = alpha == null ? 1 : alpha; cx.setLineDash(dash || []); cx.stroke();
+  cx.setLineDash([]); cx.globalAlpha = 1;
+}
+function label(t, x, y, align, color, alpha) {
+  cx.textAlign = align; cx.fillStyle = color || INK.ink3; cx.globalAlpha = alpha == null ? 1 : alpha;
+  cx.fillText(t, x, Math.round(y * G.dpr) / G.dpr); cx.globalAlpha = 1;
+}
+function endDot(x, y, color) {
+  if (!calm.matches && isLive()) {
+    const k = performance.now() % 1500 / 1500, e = 1 - (1 - k) * (1 - k);
+    cx.beginPath(); cx.arc(x, y, 4 + 8 * e, 0, 7); cx.fillStyle = color; cx.globalAlpha = .45 * (1 - e); cx.fill(); cx.globalAlpha = 1;
+  }
+  cx.beginPath(); cx.arc(x, y, 4, 0, 7); cx.fillStyle = color; cx.fill();
+}
+function targetPill(ptb, y) {
+  const top = M.t + 11, end = G.bottom - 11, out = y < top ? -1 : y > end ? 1 : 0, py = Math.max(top, Math.min(end, y)), x = G.right + 4, w = out ? 58 : 52;
+  if (!out) rule(crisp(y), INK.ink3, [7, 7]);
+  cx.beginPath();
+  { const t = Math.round(py) - 11; cx.moveTo(x + 8, t); cx.arcTo(x + w, t, x + w, t + 22, 8); cx.arcTo(x + w, t + 22, x, t + 22, 8); cx.arcTo(x, t + 22, x, t, 8); cx.arcTo(x, t, x + w, t, 8); cx.closePath(); }
+  cx.fillStyle = INK.pill; cx.fill();
+  label('目标', x + (out ? 19 : 26), py + 4, 'center', INK.ink);
+  if (out) {                                    // the target is off the chart: the chevrons say which way
+    cx.beginPath();
+    for (const d of [-3, 2]) { const m = py + d * 1 + (out < 0 ? 0 : 0); cx.moveTo(x + 40, m + (out < 0 ? 3 : -3)); cx.lineTo(x + 45, m + (out < 0 ? -1 : 1)); cx.lineTo(x + 50, m + (out < 0 ? 3 : -3)); }
+    cx.strokeStyle = INK.ink; cx.lineWidth = 1.4; cx.stroke();
+  }
+}
+function moveScale(lo, hi) {
+  if (yLo == null || calm.matches || !isLive()) { yLo = lo; yHi = hi; return; }
+  const k = 1 - Math.exp(-tickDt * 3);
+  yLo += (lo - yLo) * k; yHi += (hi - yHi) * k;
+}
+const timeCache = new Map();
+function timeLabel(a) {
+  let t = timeCache.get(a);
+  if (!t) { if (timeCache.size > 200) timeCache.clear(); t = hms(a * 1000); timeCache.set(a, t); }
+  return t;
+}
+function hairAt(x) {
+  if (x == null || x < 0 || x > G.right) return;
+  const h = Math.round(x) + .5;
+  cx.beginPath(); cx.moveTo(h, M.t); cx.lineTo(h, G.bottom); cx.lineWidth = 1; cx.strokeStyle = INK.ink3; cx.stroke();
+}
+
+function timeAxis(xLo, xHi, fx) {              // the labels travel with the line
+  const per = G.right / (xHi - xLo), every = [4, 5, 10, 15, 30, 60, 120].find(i => i * per >= 66) || 300;
+  for (let a = Math.ceil(xLo / every) * every; a <= xHi; a += every) {
+    const x = fx(a);
+    if (x > 26 && x < G.W - 26) label(timeLabel(a), x, G.bottom + 14, 'center', INK.ink3, Math.min(1, (x - 26) / 40));
+  }
+}
+function xRange() {
+  if (!isLive() || D == null) return [S.view, S.view + 300];
+  if (mode === 'btc') return [D - WINDOW, D + AHEAD];
+  return [S.T, S.T + Math.max(30, (D - S.T) / .91)];   // the Up price shows the whole window so far
+}
+function smooth(r, fx, y) {
+  const line = new Path2D();
+  line.moveTo(fx(r[0][0]), y(r[0][1]));
+  for (let i = 1; i < r.length - 1; i++) line.quadraticCurveTo(fx(r[i][0]), y(r[i][1]), (fx(r[i][0]) + fx(r[i + 1][0])) / 2, (y(r[i][1]) + y(r[i + 1][1])) / 2);
+  line.lineTo(fx(r[r.length - 1][0]), y(r[r.length - 1][1]));
+  return line;
+}
+function paintBtc() {
+  const live = isLive(), ptb = S.ptb, rollNow = G.rolling && D != null;
+  const [xLo, xHi] = xRange(), fx = a => (a - xLo) / (xHi - xLo) * G.right;
+  let run = [], runs = [run], lo = Infinity, hi = -Infinity, prev = null;
+  const add = (a, v) => {
+    if (prev != null && a - prev > BRIDGE) runs.push(run = []);
+    run.push([a, v]); prev = a;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  };
+  if (rollNow) {
+    for (const p of series) if (p[0] >= xLo - 1 && p[0] < D) add(p[0], p[1]);
+    const v = valAt(D);
+    if (v != null) add(D, v);
+  } else for (const q of S.points) if (q[3] != null) add(S.view + q[0], q[3]);
+  if (lo === Infinity && ptb == null) {
+    label(S.view !== S.T ? '这个窗口没有记录' : S.now - S.T > 10 ? '缺目标价' : '等目标价', G.right / 2, M.t + G.h1 / 2, 'center');
+    return;
+  }
+  // The target joins the scale only while it is near; further off, the pill at the edge points to it.
+  const mid0 = (lo + hi) / 2, room = Math.max(hi - lo, 8) * 2.5;
+  if (ptb != null && (!rollNow || lo === Infinity || Math.abs(ptb - mid0) <= room)) { lo = Math.min(lo, ptb); hi = Math.max(hi, ptb); }
+  const span = Math.max(hi - lo, rollNow ? 8 : 16), c = (lo + hi) / 2;
+  moveScale(c - span * .62, c + span * .62);
+  const y = v => M.t + (yHi - v) / (yHi - yLo) * G.h1;
+  const step = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].find(s => (yHi - yLo) / s <= 5) || 2000, yt = ptb != null ? y(ptb) : null;
+  for (let g = Math.ceil(yLo / step) * step; g <= yHi; g += step) {
+    const gy = y(g);
+    rule(crisp(gy), INK.grid);
+    if (yt == null || Math.abs(gy - yt) > 16) label('$' + commas(String(g)), G.right + 8, gy + 4, 'left', INK.ink3, Math.max(0, Math.min(1, (gy - M.t) / 16)));
+  }
+  if (rollNow) timeAxis(xLo, xHi, fx);
+  cx.save();
+  cx.beginPath(); cx.rect(0, M.t, G.right, G.h1); cx.clip();
+  let end = null;
+  for (const r of runs) {
+    if (!r.length) continue;
+    const line = smooth(r, fx, y), tail = r[r.length - 1];
+    const fill = new Path2D(line);
+    fill.lineTo(fx(tail[0]), G.bottom); fill.lineTo(fx(r[0][0]), G.bottom); fill.closePath();
+    cx.globalAlpha = .05; cx.fillStyle = INK.btc; cx.fill(fill); cx.globalAlpha = 1;
+    cx.lineWidth = 2; cx.lineJoin = cx.lineCap = 'round'; cx.strokeStyle = INK.btc; cx.stroke(line);
+    end = tail;
+  }
+  cx.restore();
+  if (end) rule(crisp(y(end[1])), INK.btc, [7, 7], .6);
+  if (yt != null) targetPill(ptb, yt);
+  if (end) endDot(fx(end[0]), y(end[1]), INK.btc);
+  const hov = hoverAbs();
+  if (hov != null && hov >= xLo && hov <= xHi) hairAt(fx(hov));
+}
+function paintProb() {
+  const live = isLive(), [xLo, xHi] = xRange(), fx = a => (a - xLo) / (xHi - xLo) * G.right, until = live && D != null ? D : S.view + 300;
+  const seen = S.points.filter(q => q[2] != null), vals = seen.map(q => q[2] * 100);
+  let lo = vals.length ? Math.max(0, Math.floor((Math.min(...vals) - 2) / 10) * 10) : 0;
+  let hi = vals.length ? Math.min(100, Math.ceil((Math.max(...vals) + 2) / 10) * 10) : 100;
+  while (hi - lo < 20) { if (lo > 0) lo -= 10; else hi += 10; }
+  moveScale(lo, hi);
+  const y = p => M.t + (yHi - p) / (yHi - yLo) * G.h1, tick = yHi - yLo <= 50 ? 10 : 25;
+  for (let c = Math.ceil(yLo / tick) * tick; c <= yHi; c += tick) {
+    rule(crisp(y(c)), INK.line, [1, 4]);
+    label(c + '%', G.right + 8, y(c) + 4, 'left');
+  }
+  if (live && D != null) timeAxis(xLo, xHi, fx);
+  const runs = [[]];
+  let prev = null, next = null;
+  for (const q of seen) {
+    const a = S.view + q[0];
+    if (a > until) { next = [a, q[2] * 100]; break; }
+    if (prev != null && a - prev[0] > BRIDGE) runs.push([]);
+    runs[runs.length - 1].push(prev = [a, q[2] * 100]);
+  }
+  if (live && prev && next && next[0] - prev[0] <= BRIDGE) runs[runs.length - 1].push([until, prev[1] + (next[1] - prev[1]) * (until - prev[0]) / (next[0] - prev[0])]);
+  else if (live && prev) runs[runs.length - 1].push([Math.max(until, prev[0]), prev[1]]);
+  let end = null;
+  cx.lineWidth = 2; cx.lineJoin = cx.lineCap = 'round'; cx.strokeStyle = INK.prob;
+  for (const r of runs) if (r.length) { cx.stroke(smooth(r, fx, y)); end = r[r.length - 1]; }
+  if (end) endDot(fx(end[0]), y(end[1]), INK.prob);
+  const hov = hoverAbs();
+  if (hov != null && hov >= xLo && hov <= xHi) hairAt(fx(hov));
+}
+function paint() {
+  if (!G) return;
+  cx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
+  cx.clearRect(0, 0, G.W, G.ch);
+  if (mode === 'btc') paintBtc(); else paintProb();
+  drawTip();
+}
+
+function hoverAbs() {
+  if (hx == null || !S) return null;
+  if (G.rolling && D != null && hy < G.ch) { const [a, b] = xRange(); return a + hx / G.right * (b - a); }
+  return S.view + hx / G.right * 300;
+}
+function drawTip() {
+  const tip = $('tip'), a = hoverAbs();
+  if (a == null) { if (tipText) { tipText = ''; tip.style.display = 'none'; } hairV(null); return; }
+  const s = Math.max(0, Math.min(300, a - S.view));
+  hairV(s);
+  const pts = S.points;
+  if (!pts.length) return;
+  const q = pts.reduce((p, n) => Math.abs(n[0] - s) < Math.abs(p[0] - s) ? n : p);
+  let btc = null;                              // the newest points have no average yet: carry the last one, at most 5 s old
+  for (let i = pts.indexOf(q); i >= 0 && q[0] - pts[i][0] <= 5 && btc == null; i--) btc = pts[i][3];
+  const text = `${hms((S.view + q[0]) * 1000)}　Up ${cents(q[2])}¢　BTC ${btc != null ? '$' + usd(btc) : '–'}${btc != null && S.ptb != null ? ' (' + delta(btc - S.ptb) + ')' : ''}`;
+  if (text !== tipText) { tipText = text; tip.textContent = text; tip.style.display = 'block'; }
+  const left = hx + 12;
+  tip.style.left = (left + tip.offsetWidth > G.right ? left - tip.offsetWidth - 24 : left) + 'px';
+}
+function hairV(s) {
+  if (s == null || !G) { if (hairEl) hairEl.remove(); hairEl = null; return; }
+  const h = Math.round(s / 300 * G.right) + .5;
+  if (!hairEl) hairEl = el('line', {class: 'hair'});
+  if (hairEl.parentNode !== $('c')) $('c').append(hairEl);
+  hairEl.setAttribute('x1', h); hairEl.setAttribute('x2', h); hairEl.setAttribute('y1', G.t2); hairEl.setAttribute('y2', G.H - M.b);
+}
+// Volume per 5 s: Up pressure above the line, Down below.
+function drawVol() {
+  const bars = S ? S.bars : [], key = [S && S.view, G.W, G.H, G.rolling, bars.join(';')].join('|');
+  if (key === volKey) return;
+  volKey = key;
+  const svg = $('c'), {H, h2, t2, right, bottom} = G, x = s => Math.round(s / 300 * right), snap = v => Math.round(v) + .5;
+  svg.replaceChildren();
+  svg.append(el('line', {class: 'base', x1: 0, x2: G.W, y1: snap(bottom), y2: snap(bottom)}));
+  const top = Math.max(1, ...bars.map(b => Math.max(b[1], b[2]))), mid2 = snap(t2 + h2 / 2), bw = Math.max(1, x(5) - x(0) - 1);
+  svg.append(el('line', {class: 'base', x1: 0, x2: right, y1: mid2, y2: mid2}));
+  for (const [i, u, v] of bars) {
+    const hu = Math.round(u / top * (h2 / 2)), hv = Math.round(v / top * (h2 / 2)), bx = x(i * 5);
+    if (hu) svg.append(el('rect', {class: 'vb', x: bx, y: mid2 - .5 - hu, width: bw, height: hu}));
+    if (hv) svg.append(el('rect', {class: 'vs', x: bx, y: mid2 + .5, width: bw, height: hv}));
+  }
+  svg.append(el('text', {x: 0, y: t2 - 7}, '成交量 每 5 秒（绿买涨 红买跌）'));
+  svg.append(el('text', {x: right + 8, y: t2 + 10}, shares(top)));
+  for (let s = 0; s <= 300; s += 60) {
+    if (right < 480 && (s === 60 || s === 240) || right < 300 && s === 180) continue;   // the edge labels are anchored inward and would crowd these
+    svg.append(el('text', {x: x(s), y: H - 5, 'text-anchor': s === 0 ? 'start' : s === 300 ? 'end' : 'middle'}, S ? hm(S.view + s) : ''));
+  }
+  hairEl = null;
+}
+
+// Trades fly up the left of the chart as they happen on the display clock.
+const SLOT = [1, .953, .8125, .578, .25], flyBox = $('fly');
+let tapeSeen = null, flyQ = [], flyAlive = [], flyAt = 0;
+function clearFly() { flyBox.replaceChildren(); flyAlive = []; flyQ = []; tapeSeen = null; }
+function feedTape() {
+  if (!isLive() || calm.matches) { if (tapeSeen || flyAlive.length) clearFly(); return; }
+  const tape = S.tape || [], key = t => [t.ts, t.price, t.size, t.buy].join(), next = new Set(tape.map(key));
+  const fresh = tapeSeen && !document.hidden ? tape.filter(t => !tapeSeen.has(key(t))) : [];
+  tapeSeen = next;
+  const merged = new Map();
+  for (const t of fresh) {
+    const k = t.ts + '|' + t.buy, m = merged.get(k);
+    if (m) m.val += t.size * t.price; else merged.set(k, {ts: t.ts, buy: t.buy, val: t.size * t.price});
+  }
+  flyQ.push(...[...merged.values()].filter(t => t.val >= 1));
+  flyQ.sort((a, b) => a.ts - b.ts);
+  if (flyQ.length > 12) flyQ = flyQ.slice(-12);
+}
+const slotAt = (n, i) => { n.e.style.transform = `translateY(${-28 * i}px)`; n.e.style.opacity = SLOT[i]; };
+function dropFly(n) { n.e.className += ' out'; n.e.style.opacity = 0; n.e.style.transform = `translateY(${-28 * SLOT.length}px)`; setTimeout(() => n.e.remove(), 260); }
+function flurry(now) {
+  if (D != null && flyQ.length && now - flyAt >= 120 && flyQ[0].ts <= D * 1000) {
+    const t = flyQ.shift(), e = html('div', t.buy ? 'u' : 'd', '+ $' + shares(t.val));
+    flyAt = now;
+    flyAlive.unshift({e, at: now});
+    if (flyAlive.length > SLOT.length) dropFly(flyAlive.pop());
+    flyAlive.forEach(slotAt);
+    flyBox.append(e);
+  }
+  const old = flyAlive[flyAlive.length - 1];
+  if (old && now - old.at > 3000) dropFly(flyAlive.pop());
+}
+
+function loop(now) {
+  raf = 0;
+  if (!S || !G || !isLive() || document.hidden || !onScreen || calm.matches) return;
+  // 60 fps where the line moves fast enough to show it; on a narrow chart, or on a slow phone, 30 is the same picture.
+  const half = slow > 9 || mode !== 'btc' || G.right / (WINDOW + AHEAD) < 20;
+  if (half) { raf = -1; setTimeout(() => { raf = requestAnimationFrame(loop); }, 22); }   // no frame is asked for until one is wanted
+  else raf = requestAnimationFrame(loop);
+  if (now - paintedAt < (half ? 28 : 14)) return;
+  paintedAt = now;
+  const t0 = performance.now();
+  tick(); flurry(t0); paint();
+  slow += (performance.now() - t0 - slow) * .05;
+}
+function chart() {
+  if (!S) return;
+  if (!G || G.rolling !== isLive()) layout();
+  if (!G) return;
+  const carriedOn = seenLive && isLive() && mode === seenMode;   // the next window starting is not a change of view: the line just keeps going
+  seenLive = isLive();
+  if (carriedOn) seenView = S.view;
+  if (S.view !== seenView || mode !== seenMode) {
+    if (seenView != null && !calm.matches) $('wrap').animate({opacity: [0, 1]}, {duration: 220, easing: 'cubic-bezier(.26,.08,.25,1)'});
+    seenView = S.view; seenMode = mode; yLo = yHi = null; D = null; paintKey = '';
+  }
+  drawVol();
+  const live = isLive();
+  if (live && !calm.matches && onScreen && !document.hidden) { if (!raf) raf = requestAnimationFrame(loop); return; }
+  if (live) tick();
+  const key = [S.view, mode, S.points.length, S.ptb, D, hx, hy, G.W, G.H].join();
+  if (onScreen && key !== paintKey) { paintKey = key; paint(); }
+}
+function point(e) {
+  const r = $('wrap').getBoundingClientRect();
+  hx = Math.max(0, Math.min(G ? G.right : r.width, e.clientX - r.left)); hy = e.clientY - r.top;
+  paintKey = '';
+  if (G && !raf) chart();
+}
+$('wrap').addEventListener('pointermove', point);
+$('wrap').addEventListener('pointerdown', point);   // a tap on a phone has no move
+$('wrap').addEventListener('pointerleave', () => { hx = hy = null; paintKey = ''; if (G && !raf) chart(); });
+document.fonts && document.fonts.addEventListener('loadingdone', () => { cx.font = '12px ' + bodyFont; paintKey = ''; if (S && G) chart(); });
+new ResizeObserver(() => { layout(); if (S && G) { chart(); paint(); } }).observe($('wrap'));
+(function watchDensity() { matchMedia(`(resolution:${devicePixelRatio}dppx)`).addEventListener('change', () => { layout(); if (S && G) { chart(); paint(); } watchDensity(); }, {once: true}); })();
+new IntersectionObserver(es => { onScreen = es[0].isIntersecting; chart(); }).observe(cv);
+
+let bookKey = '', tapeKey = '', statusKey = '', resultKey = '';
+function renderBook() {
+  const L = S.ladder, age = L ? S.now * 1000 - L.ts : 0;   // at the source: the public copy arrives a few seconds late
+  const said = !L ? '等盘口' : age > 2000 ? (age / 1000).toFixed(0) + ' 秒没变' : '';
+  if ($('bookc').textContent !== said) $('bookc').textContent = said;
+  const key = JSON.stringify([L && L.asks.slice(0, ROWS), L && L.bids.slice(0, ROWS), (S.tape || [])[0]]);
+  if (key === bookKey) return;
+  bookKey = key;
+  const asks = L ? L.asks.slice(0, ROWS) : [], bids = L ? L.bids.slice(0, ROWS) : [];
+  const totals = side => { let t = 0; return side.map(lv => (t += lv[0] * (lv[1] || 0))); };
+  const ta = totals(asks), tb = totals(bids), most = Math.max(1, ...ta, ...tb);
+  const line = (lv, total, isAsk) => {          // empty rows keep the card one height, so the tape below never jumps
+    if (!lv) return html('div', 'row');
+    const r = row('', [[cents(lv[0]) + '¢', 'px ' + (isAsk ? 't-d' : 't-u')], [lv[1] == null ? '–' : usd(lv[1])], [lv[1] == null ? '–' : '$' + usd(total)]]);
+    const pct = (total / most * 60).toFixed(1), tint = isAsk ? 'var(--down-bar)' : 'var(--up-bar)';
+    r.style.background = `linear-gradient(to right,${tint} ${pct}%,transparent ${pct}%)`;
+    return r;
+  };
+  const up = [], down = [];
+  for (let i = ROWS - 1; i >= 0; i--) up.push(line(asks[i], ta[i], true));
+  for (let i = 0; i < ROWS; i++) down.push(line(bids[i], tb[i], false));
+  if (L && !bids.length) down[0] = html('div', 'row none', '没有买单');
+  if (L && !asks.length) up[ROWS - 1] = html('div', 'row none', '没有卖单');
+  patch($('asks'), up);
+  patch($('bids'), down);
+  const lastT = (S.tape || [])[0];
+  $('lastp').textContent = lastT ? `最新价: ${cents(lastT.price)}¢` : '';
+  $('spread').textContent = asks[0] && bids[0] ? `点差: ${cents(asks[0][0] - bids[0][0])}¢` : '';
+}
+
+// Simulated orders: priced on the real book, kept only in this browser, never sent anywhere.
+let side = 'up', paper = [], paperKey = '', placedAt = 0;
+function readPaper() {                         // the stored list is the truth: another tab may have written since
+  try {
+    const v = JSON.parse(localStorage.getItem('paper'));
+    return Array.isArray(v) ? v.filter(o => o && Number.isFinite(o.T) && Number.isFinite(o.shares) && Number.isFinite(o.spent) && Number.isFinite(o.fee) && Number.isFinite(o.avg) && Number.isFinite(o.at)) : [];
+  } catch (e) { return paper; }                // private mode or damaged data: keep what this visit has
+}
+paper = readPaper();
+const savePaper = () => { try { localStorage.setItem('paper', JSON.stringify(paper.slice(0, 200))); } catch (e) { /* kept for this visit */ } };
+addEventListener('storage', e => { if (e.key === 'paper' || e.key === null) { paper = readPaper(); if (S) drawPaper(); } });
+const FEE = p => .07 * p * (1 - p);
+function fillFor(amount) {
+  const L = S && S.ladder;
+  if (!L) return null;
+  const levels = side === 'up' ? L.asks.map(l => [l[0], l[1]]) : L.bids.map(l => [1 - l[0], l[1]]);
+  let left = amount, shares = 0, fee = 0;
+  for (const [p, size] of levels) {
+    if (!size || left <= 1e-9) continue;
+    const take = Math.min(left / p, size);
+    shares += take; fee += take * FEE(p); left -= take * p;
+  }
+  return shares ? {shares, spent: amount - left, fee, avg: (amount - left) / shares} : null;
+}
+function renderOrder() {
+  $('upb').classList.toggle('on', side === 'up'); $('downb').classList.toggle('on', side === 'down');
+  $('upb').setAttribute('aria-pressed', String(side === 'up')); $('downb').setAttribute('aria-pressed', String(side === 'down'));
+  const amount = parseFloat($('amt').value), f = amount > 0 ? fillFor(amount) : null;
+  const left = S.T + 300 - Date.now() / 1000, placed = Date.now() - placedAt < 1500, enough = amount >= 1;
+  const open = tradable && left > 5 && !!f && enough && !placed && !(f.spent < amount - .005);
+  const line = f ? [`${f.shares.toFixed(2)} 股 · 均价 ${(f.avg * 100).toFixed(1)}¢`, `手续费 $${f.fee.toFixed(2)} · 赢 $${f.shares.toFixed(2)}`] : ['', ''];
+  const est = $('est');
+  if (est.dataset.k !== line.join()) { est.dataset.k = line.join(); est.replaceChildren(html('span', '', line[0] || '输入金额'), html('span', '', line[1])); }
+  const short = f && f.spent < amount - .005;
+  const label = placed ? '已记录' : !(amount > 0) ? '输入金额' : !enough ? '最少 $1' : short ? `盘口只够 $${f.spent.toFixed(2)}，请减少金额` : left <= 5 ? '即将结算' : !tradable ? '等待最新盘口' : !S.ladder ? '等待盘口' : !f ? '盘口没有可买的份额' : `模拟买入 ${side === 'up' ? 'Up' : 'Down'}（不发真实订单）`;
+  const place = $('place');
+  if (place.textContent !== label) place.textContent = label;
+  place.disabled = !open;
+}
+const official = {}, asked = {};
+async function askOfficial(T) {                // only for an order older than the history this page keeps
+  asked[T] = Date.now();
+  try {
+    const r = await fetch(`https://gamma-api.polymarket.com/markets?slug=btc-updown-5m-${T}&closed=true`);
+    const m = (await r.json())[0];
+    if (!m) return;
+    const names = JSON.parse(m.outcomes), prices = JSON.parse(m.outcomePrices), p = prices[names.indexOf('Up')];
+    if (p === '1' || p === '0') official[T] = p === '1';
+  } catch (e) { /* asked again in a minute */ }
+}
+function settlePaper() {
+  const now = Date.now(), up = T => {
+    if (T in official) return official[T];
+    const r = S.hist.find(h => h.T === T);
+    return r && !r.ptb_approx && !r.final_approx ? !!r.up : null;   // an approximate price can still flip
+  };
+  const open = paper.filter(o => o.win == null);
+  if (!open.length) return;
+  const old = open.find(o => up(o.T) == null && now / 1000 > o.T + 390 && now - (asked[o.T] || 0) > 60000);
+  if (old) askOfficial(old.T);
+  if (!open.some(o => up(o.T) != null)) return;
+  paper = readPaper();
+  for (const o of paper) {
+    const u = o.win == null ? up(o.T) : null;
+    if (u != null) o.win = u === (o.side === 'up');
+  }
+  savePaper();
+}
+const money = v => v >= 1000 ? shares(v) : v.toFixed(2);   // cents stop mattering where the row runs out of room
+function drawPaper() {
+  $('paper').hidden = S.view !== S.T || !paper.length;
+  const key = paper.slice(0, 3).map(o => [o.at, o.win, o.T + 300 > Date.now() / 1000]).join() + paper.length + '|' + paper.reduce((a, o) => a + (o.win == null ? 0 : 1), 0);
+  if (key === paperKey) return;
+  paperKey = key;
+  const net = o => (o.win ? o.shares : 0) - o.spent - o.fee, done = paper.filter(o => o.win != null), sum = done.reduce((a, o) => a + net(o), 0);
+  $('papers').textContent = `${paper.length} 笔${done.length ? ` · 累计 ${sum < 0 ? '−' : '+'}$${usd(Math.abs(sum))}` : ''}`;
+  $('paperl').replaceChildren(...paper.slice(0, 3).map(o => row('', [[hms(o.at), 'time'], [`${o.side === 'up' ? 'Up' : 'Down'} ${(o.avg * 100).toFixed(1)}¢ $${money(o.spent)}`, o.side === 'up' ? 't-u' : 't-d'],
+    o.win == null ? [o.T + 300 > Date.now() / 1000 ? '持仓' : '结算中'] : [`${net(o) < 0 ? '−' : '+'}$${money(Math.abs(net(o)))}`, net(o) < 0 ? 't-d' : 't-u']])));
+}
+for (const [id, v] of [['upb', 'up'], ['downb', 'down']]) $(id).addEventListener('click', () => { side = v; if (S) renderOrder(); });
+for (const b of document.querySelectorAll('.add')) b.addEventListener('click', () => { $('amt').value = (parseFloat($('amt').value) || 0) + +b.dataset.a; if (S) renderOrder(); });
+$('amt').addEventListener('input', e => {
+  const clean = e.target.value.replace(/,/g, '.').replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1').replace(/^(\d*\.\d{0,2}).*/, '$1');
+  if (clean !== e.target.value) e.target.value = clean;
+  if (S) renderOrder();
+});
+$('trade').addEventListener('submit', e => {
+  e.preventDefault();
+  if ($('place').disabled) return;
+  const f = fillFor(parseFloat($('amt').value));
+  if (!f) return;
+  paper = readPaper();
+  paper.unshift({T: S.T, side, shares: f.shares, spent: f.spent, fee: f.fee, avg: f.avg, at: Date.now(), win: null});
+  placedAt = Date.now();
+  savePaper(); drawPaper(); renderOrder();
+  setTimeout(() => { if (S) renderOrder(); }, 1510);   // the button unlocks on time, not at the next data update
+});
+
+function renderTape() {
+  const f = S.flow || {}, t0 = (S.tape || [])[0], key = [t0 && t0.ts, t0 && t0.size, (S.tape || []).length, f.up, f.down].join();
+  if (key === tapeKey) return;
+  tapeKey = key;
+  $('tapec').textContent = `30 秒 买涨 ${shares(f.up || 0)} / 买跌 ${shares(f.down || 0)}`;
+  // Same second, same side, same price is one line.
+  const rows = [];
+  for (const t of S.tape || []) {
+    const p = rows[rows.length - 1], sec = Math.floor(t.ts / 1000);
+    if (p && p.sec === sec && p.buy === t.buy && p.price === t.price) p.size += t.size;
+    else rows.push({sec, buy: t.buy, price: t.price, size: t.size, ts: t.ts});
+  }
+  patch($('tape'), rows.map(t => row('', [[hms(t.ts), 'time'], [(t.buy ? '买 ' : '卖 ') + cents(t.price) + '¢', t.buy ? 't-u' : 't-d'], [qty(t.size), t.size >= BIG ? 'big' : '']])));
+}
+
+function renderList() {
+  const key = S.T + '|' + S.view + '|' + S.hist.map(h => [h.T, h.up, h.final, h.ptb].join()).join('|');
+  if (key === listKey) return;
+  listKey = key;
+  const box = $('menu'), active = document.activeElement, scroll = box.scrollTop;
+  const focused = $('bar').contains(active) && active.dataset.t ? [active.parentElement.id, active.dataset.t] : null;
+  box.replaceChildren();
+  const pickBtn = (cls, t, parts, title) => {
+    const b = html('button', cls);
+    b.type = 'button';
+    b.dataset.t = t;
+    if (title) { b.title = title; b.setAttribute('aria-label', title); }
+    b.setAttribute('aria-pressed', String(S.view === t));
+    b.append(...parts);
+    b.addEventListener('click', () => {
+      if (box.contains(b)) $('pastbtn').focus();   // the menu is about to close
+      closeMenu(); pick(t === S.T ? null : t);
+    });
+    return b;
+  };
+  box.append(pickBtn('', S.T, [html('span', '', hm(S.T)), html('span', 'now', '进行中')]));
+  let newer = S.T, slack = 300;                // the window that just closed takes a few seconds to settle
+  for (const r of S.hist) {
+    if (newer - r.T > 300 + slack) box.append(html('span', 'none', `${hm(r.T + 300)}–${hm(newer)} 没有记录`));
+    const c = r.up ? 't-u' : 't-d';
+    box.append(pickBtn('', r.T, [html('span', '', hm(r.T)), html('span', c, r.up ? '▲ 涨' : '▼ 跌'), html('span', 'd ' + c, delta(r.final - r.ptb))]));
+    newer = r.T; slack = 0;
+  }
+  box.scrollTop = scroll;
+  // Newest results on the right, like the official row.
+  $('balls').replaceChildren(...S.hist.slice(0, 4).reverse().map(r =>
+    pickBtn('ball ' + (r.up ? 'u' : 'd'), r.T, [document.createTextNode(r.up ? '▲' : '▼')], `${hm(r.T)} ${r.up ? '涨' : '跌'} ${delta(r.final - r.ptb)}`)));
+  const recent = S.hist.slice(0, PILLS).reverse().map(r => pickBtn('pill old', r.T, [document.createTextNode(hm(r.T))]));
+  const live = pickBtn('pill', S.T, [html('i', 'dot'), document.createTextNode(hm(S.T))]);
+  // A window picked from further back gets its own pill, so the selection is always visible.
+  const extra = S.view !== S.T && !S.hist.slice(0, PILLS).some(r => r.T === S.view) ? [pickBtn('pill', S.view, [document.createTextNode(hm(S.view))])] : [];
+  $('pills').replaceChildren(...extra, ...recent, live);
+  if (focused) $(focused[0])?.querySelector(`[data-t="${focused[1]}"]`)?.focus();
+}
+
+function renderStatus() {
+  const r = S.rules, box = $('status');
+  let line = '规律：未运行';
+  if (r && r.passed && r.passed.length) line = `规律：${r.passed.length} 条通过验证`;
+  else if (r && r.status === '没有规律通过') line = `规律：试过 ${r.tested} 条，没有通过`;
+  else if (r) {
+    const end = new Date((S.now + (r.need_total - r.windows) * 300) * 1000), done = `${end.getMonth() + 1}/${end.getDate()}`;   // from now, so time the Mac was off pushes it back
+    const old = (S.now - r.generated) / 3600;
+    line = `规律：样本 ${r.windows} / ${r.need_total}，${done} 前不能判断${old > 3 ? `，${Math.floor(old)} 小时没更新` : ''}`;
+  }
+  const key = [line, S.spot, S.binance, note].join('|');
+  if (key === statusKey) return;
+  statusKey = key;
+  const item = (k, v) => { const s = html('span', '', k + ' '); s.append(html('b', '', v)); return s; };
+  const parts = [html('span', '', line), item('Chainlink', '$' + usd(S.spot)), item('Binance USDT', '$' + usd(S.binance))];
+  if (note) parts.push(html('span', '', note));
+  patch(box, parts);
+}
+
+// A whole number of pixels per digit: browsers round a fractional line height, and the error adds up down the column.
+function rollHeight(e) { e.style.setProperty('--lh', Math.ceil(parseFloat(getComputedStyle(e).fontSize) * 1.25) + 'px'); }
+addEventListener('resize', () => { for (const r of document.querySelectorAll('.rl')) rollHeight(r.parentElement); });
+// One cell per character, matched from the right so a digit keeps its column when the number grows.
+function roll(e, text) {
+  if (e._v === text) return;
+  const fresh = e._v == null;
+  e._v = text;
+  if (fresh) {
+    e.replaceChildren(html('span', 'sr'), html('span', 'rl'));
+    e.lastChild.setAttribute('aria-hidden', 'true');
+    rollHeight(e);
+  }
+  e.firstChild.textContent = text;
+  const box = e.lastChild, chars = [...text];
+  while (box.children.length > chars.length) box.firstChild.remove();
+  const have = box.children.length;
+  for (let i = chars.length - 1; i >= 0; i--) {
+    const c = chars[i], digit = c >= '0' && c <= '9', at = have - (chars.length - i);
+    let cell = at >= 0 ? box.children[at] : null;
+    if (cell && cell.dataset.c === c) continue;
+    if (cell && digit && cell.classList.contains('dg')) { cell.dataset.c = c; cell.style.setProperty('--d', c); continue; }
+    const next = html('i', (digit ? 'dg' : 'ch') + (fresh ? '' : ' new'));
+    next.dataset.c = c;
+    if (digit) next.style.setProperty('--d', c);
+    if (cell) cell.replaceWith(next); else box.prepend(next);
+  }
+}
+
+function setDelta(v) {
+  const e = $('delta');
+  roll(e, v == null ? '' : `${v >= 0 ? '▲' : '▼'} $${usd(Math.abs(v))}`);
+  e.className = v == null ? '' : v >= 0 ? 'u' : 'd';
+}
+
+function renderQuote(past, rem) {
+  const c = S.cur || {}, st = S.settled, vd = new Date(S.view * 1000), today = `${vd.getMonth() + 1}月${vd.getDate()}日`;
+  $('win').textContent = `${today}, ${hm(S.view)}–${hm(S.view + 300)}`;
+  $('clock').hidden = past; $('golive').hidden = !past;
+  roll($('mm'), String(Math.floor(rem / 60)).padStart(2, '0'));
+  roll($('ss'), String(Math.floor(rem % 60)).padStart(2, '0'));
+  $('btcStats').hidden = mode !== 'btc'; $('probStats').hidden = mode !== 'prob';
+  const near = past && st && (st.ptb_approx || st.final_approx) ? '≈' : '';
+  roll($('ptb'), past ? (st ? near + '$' + usd(st.ptb) : '–') : (S.ptb != null ? '$' + usd(S.ptb) : '–'));
+  $('nowl').textContent = past ? '收盘价格' : '当前价格';
+  const shown = past ? null : S.twap;       // the newest price, matching the official page; the line's end follows a moment later
+  roll($('now'), past ? (st ? near + '$' + usd(st.final) : '结果未知') : (shown != null ? '$' + usd(shown) : '–'));
+  setDelta(past ? (st ? st.final - st.ptb : null) : (S.ptb != null && shown != null ? shown - S.ptb : null));
+  $('probl').textContent = past ? 'UP · 剩 1 分钟时' : 'UP';
+  const m = past ? (st ? st.m60 : null) : c.mid;
+  roll($('prob'), m == null ? '–' : cents(m) + '% 概率');
+  const first = past ? null : (S.points.find(q => q[2] != null) || [])[2], moved = m != null && first != null ? Math.round((m - first) * 100) : null;
+  roll($('probd'), moved ? `${moved > 0 ? '▲' : '▼'} ${Math.abs(moved)}%` : '');
+  $('probd').className = moved > 0 ? 'u' : 'd';
+
+  $('trade').hidden = past; $('paper').hidden = past || !paper.length; $('bookcard').hidden = past; $('tapecard').hidden = past; $('result').hidden = !past;
+  if (past) {
+    const box = $('result'), key = JSON.stringify([S.view, st]);
+    if (key === resultKey) return;
+    resultKey = key;
+    box.replaceChildren();
+    if (st) {
+      box.append(html('small', '', '结果'), html('b', st.up ? 't-u' : 't-d', (st.up ? '▲ 上涨 ' : '▼ 下跌 ') + '$' + usd(Math.abs(st.final - st.ptb))));
+      const line = (k, v) => { const d = html('div'); d.append(html('span', '', k), html('span', '', v)); return d; };
+      box.append(line('目标价格', '$' + usd(st.ptb)), line('收盘价格', '$' + usd(st.final)), line('剩 1 分钟时 Up', st.m60 != null ? cents(st.m60) + '¢' : '–'));
+    } else box.append(html('small', '', '这个窗口还没有结果'));
+  } else {
+    roll($('upv'), c.ask != null && c.ask < 1 ? cents(c.ask) + '¢' : '–');
+    roll($('downv'), c.bid != null && c.bid > 0 ? cents(1 - c.bid) + '¢' : '–');
+    renderOrder();
+  }
+}
+
+const cardsSeen = {bookcard: true, tapecard: true};
+{ const io = new IntersectionObserver(es => { for (const e of es) cardsSeen[e.target.id] = e.isIntersecting; if (S && es.some(e => e.isIntersecting)) render(); }, {rootMargin: '300px'});
+  io.observe($('bookcard')); io.observe($('tapecard')); }
+function render() {
+  if (!S) {
+    if (Date.now() - started > 15000) { const a = $('alert'); a.hidden = false; a.textContent = '正在连接数据'; }
+    return;
+  }
+  const rem = Math.max(0, S.T + 300 - Date.now() / 1000), c = S.cur || {}, past = S.view !== S.T;
+  renderQuote(past, rem);
+
+  const names = {pm: '盘口', cl: 'Chainlink', bn: 'Binance'};
+  const bad = S.replaying ? [] : Object.keys(names).filter(k => S.age[k] == null || S.age[k] > 15);
+  const silent = Date.now() - freshAt;   // counted on our own clock, so a wrong phone clock can't trip it
+  // A short interruption stays invisible: the last numbers hold while the connection recovers in the background.
+  const issue = !!S.error || bad.length > 0 || (!past && S.quote_age > 15 && c.mid > .05 && c.mid < .95);
+  if (!issue) troubleAt = Date.now();
+  note = silent > LOST ? (quotaOut ? '今天的免费额度用完了，早上 9 点恢复' : `数据暂停更新，最后 ${hms(srcNow * 1000)}，恢复后自动继续`)
+    : silent > QUIET || Date.now() - troubleAt > TROUBLE ? '正在重新连接' : '';
+  tradable = !past && silent <= 10000 && S.quote_lag == null;   // stricter than the notice: a simulated fill needs a current book
+  $('alert').hidden = true;
+  document.title = (!past && c.mid != null ? cents(c.mid) + '¢ ' : '') + clock(rem) + ' BTC 5 分钟';
+  const selecting = !getSelection().isCollapsed;   // rebuilding the rows would clear a selection being copied
+  if (!selecting) renderStatus();
+  renderList();
+  settlePaper();
+  drawPaper();
+  if (!past && !selecting) { if (cardsSeen.bookcard) renderBook(); if (cardsSeen.tapecard) renderTape(); }
+  if (!document.hidden) chart();
+}
+function hold(next) {                          // a late quote holds the last one instead of blanking the price
+  if (next.view !== next.T || !next.cur) return;
+  if (next.quote_lag == null) held = {T: next.T, bid: next.cur.bid, ask: next.cur.ask, mid: next.cur.mid};
+  else if (held && held.T === next.T) Object.assign(next.cur, {bid: held.bid, ask: held.ask, mid: held.mid});
+}
+function noteFresh(now) {
+  if (now > srcNow) { freshAt = srcNow ? Date.now() : Math.min(Date.now(), now * 1000); srcNow = now; }   // first answer may already be old
+}
+// Pushed once a second over a WebSocket; polling below takes over by itself whenever this goes quiet.
+const useWs = location.protocol === 'https:';
+let ws = null, wsAt = 0, wsOpenedAt = 0, wsGap = 1000, wsT = null, polledAt = 0;
+const streaming = () => Date.now() - wsAt < 5000;
+function connect() {
+  if (!useWs || document.hidden || ws) return;
+  clearTimeout(wsT);
+  wsOpenedAt = Date.now();
+  const s = ws = new WebSocket(`wss://${location.host}/live`);
+  s.onmessage = e => { wsAt = Date.now(); wsGap = 1000; onTick(JSON.parse(e.data)); };
+  s.onclose = () => {
+    if (ws === s) ws = null;
+    if (document.hidden) return;
+    wsT = setTimeout(connect, wsGap);
+    wsGap = Math.min(wsGap * 2, 30000);
+  };
+}
+function dropQuietSocket() {                   // a phone can leave a dead socket looking open
+  if (ws && Date.now() - Math.max(wsAt, wsOpenedAt) > 15000) { const s = ws; s.close(); s.onclose(); s.onclose = null; }
+}
+function onTick(t) {
+  if (!S || t.T !== S.T) { if (!inFlight) poll().then(render); return; }   // the next window: fetch it whole
+  if (t.now < S.now) return;
+  const live = S.view === S.T;
+  for (const k of ['now', 'twap', 'spot', 'binance', 'replaying', 'error', 'age', 'quote_age', 'quote_lag', 'flow', 'depth', 'ladder', 'hist', 'rules']) if (k in t) S[k] = t[k];
+  const known = new Set((S.tape || []).map(tapeKey2));
+  S.tape = [...t.tape.filter(r => !known.has(tapeKey2(r))), ...(S.tape || [])].slice(0, 40);
+  if (live) {
+    S.ptb = t.ptb; S.edge = t.edge; S.cur = t.cur;
+    hold(S);
+    for (const q of t.points) {
+      let i = S.points.length - 1;
+      while (i >= 0 && S.points[i][0] > q[0]) i--;
+      if (i >= 0 && S.points[i][0] === q[0]) S.points[i] = q; else S.points.splice(i + 1, 0, q);
+    }
+    for (const b of t.bars) {
+      const i = S.bars.findIndex(x => x[0] === b[0]);
+      if (i >= 0) S.bars[i] = b; else S.bars.push(b);
+    }
+  }
+  feed();
+  noteFresh(t.now);
+  render();
+}
+const tapeKey2 = r => [r.ts, r.price, r.size, r.buy].join();
+async function poll() {
+  if (inFlight) return;
+  inFlight = true;
+  polledAt = Date.now();
+  const asked = sel, abort = new AbortController(), timer = setTimeout(() => abort.abort(), 6000);
+  let failed = false;
+  try {
+    const r = await fetch('/state' + (asked != null ? '?t=' + asked : ''), {cache: 'no-store', signal: abort.signal});
+    quotaOut = r.status === 429;
+    if (!r.ok) throw new Error(r.status);
+    const next = await r.json();
+    if (asked === sel) {                     // the user switched windows meanwhile: drop it
+      if (!(S && next.T === S.T && next.view === S.view && next.now < S.now)) {   // else a tick got here first
+        hold(next);
+        S = next;
+        feed();
+        noteFresh(next.now);
+      }
+      if (sel != null && next.view === next.T) sel = null;   // the asked window is no longer kept
+    }
+  } catch (e) { failed = true; }
+  clearTimeout(timer);
+  inFlight = false;
+  clearTimeout(retryT);
+  retryT = null;
+  if (!failed) retryGap = 1000;
+  else if (!quotaOut && !document.hidden && !streaming()) {    // one retry at a time, never faster than normal polling in the long run
+    retryT = setTimeout(poll, retryGap);
+    retryGap = Math.min(retryGap * 2, 5000);
+  }
+}
+function pick(t) {
+  sel = t; hx = hy = null; inFlight = false; poll().then(render);
+  if (innerWidth <= 820 || innerHeight <= 560) scrollTo(0, 0);       // the list sits below the chart on a phone
+}
+function closeMenu() { $('menu').hidden = true; $('pastbtn').setAttribute('aria-expanded', 'false'); }
+$('pastbtn').addEventListener('click', e => {
+  e.stopPropagation();
+  const open = $('menu').hidden;
+  $('menu').hidden = !open; $('pastbtn').setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', e => { if (!$('menu').contains(e.target)) closeMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+$('golive').addEventListener('click', () => pick(null));
+function setMode(m) {
+  mode = m; localStorage.setItem('chart', m);
+  for (const b of document.querySelectorAll('#toggle button')) b.setAttribute('aria-pressed', String(b.dataset.m === m));
+  if (S) render();
+}
+for (const b of document.querySelectorAll('#toggle button')) b.addEventListener('click', () => setMode(b.dataset.m));
+setMode(mode);
+poll().then(render);
+// A hidden tab shouldn't spend the daily request quota; 3 s on the public site lets three tabs stay open all day.
+setInterval(() => { if (!document.hidden && !retryT && (!streaming() || Date.now() - polledAt > 60000)) poll(); }, location.hostname === '127.0.0.1' ? 2000 : 3000);
+connect();
+const wake = () => {
+  if (document.hidden) { if (ws) { const s = ws; ws = null; s.close(); } clearTimeout(wsT); return; }
+  inFlight = false; poll().then(render);
+  dropQuietSocket(); connect();
+};
+for (const ev of ['pageshow', 'focus', 'online']) addEventListener(ev, wake);
+document.addEventListener('visibilitychange', wake);
+setInterval(() => {   // independent of the network, so a hung source still shows as stale
+  const now = Date.now(), gap = now - lastTick;
+  lastTick = now;
+  // A phone freezes timers while scrolling and a hidden tab doesn't poll: time we weren't looking is not an outage.
+  if (gap > 1500 || document.hidden) { freshAt += gap; troubleAt += gap; if (gap > 1500) wake(); }
+  if (!document.hidden) dropQuietSocket();
+  if (S && streaming() && S.view === S.T) {
+    const rem = Math.max(0, S.T + 300 - now / 1000);
+    roll($('mm'), p2(Math.floor(rem / 60))); roll($('ss'), p2(Math.floor(rem % 60)));
+    return;
+  }
+  render();
+}, 500);
+</script>
+</body>
+</html>
