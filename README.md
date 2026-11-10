@@ -1,10 +1,10 @@
 # Polymarket BTC 5 分钟盘口研究
 
-个人量化研究项目（Python）。实时采集 Polymarket「BTC 5 分钟涨跌」市场的盘口、成交、Chainlink 和 Binance 价格，重建挂单簿，挖掘盘口价格规律，并用影子下单回放验证。**只做研究，不发送任何真实订单，代码里没有私钥或交易凭证。**
+为美国客户开发的量化研究项目（Python）。实时采集 Polymarket「BTC 5 分钟涨跌」市场的盘口、成交、Chainlink 和 Binance 价格，重建挂单簿，挖掘盘口价格规律，并用影子下单回放验证。**只做研究，不发送任何真实订单，代码里没有私钥或交易凭证。**
 
 实时页面：https://polymarket-btc5m.kaitogogo123.workers.dev
 
-Personal quant research in Python: live collection of Polymarket BTC 5-minute markets (order book, trades, Chainlink, Binance), order-book reconstruction from price-change events (99.96% match with official snapshots), rule mining with out-of-sample validation, and shadow-order replay. Research only, no real orders.
+Quant research for a US client, in Python: live collection of Polymarket BTC 5-minute markets (order book, trades, Chainlink, Binance), order-book reconstruction from price-change events (99.96% match with official snapshots), rule mining with out-of-sample validation, and shadow-order replay. Research only, no real orders.
 
 ## 做了什么
 
